@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+
+  /* MD3 Expressive Colors (Tonal Palettes) */
+  --color-md-primary: #004ac1;
+  --color-md-on-primary: #ffffff;
+  --color-md-primary-container: #d8e2ff;
+  --color-md-on-primary-container: #001a41;
+  
+  --color-md-secondary: #575e71;
+  --color-md-on-secondary: #ffffff;
+  --color-md-secondary-container: #dbe2f9;
+  --color-md-on-secondary-container: #141b2c;
+  
+  --color-md-tertiary: #b0008d;
+  --color-md-on-tertiary: #ffffff;
+  --color-md-tertiary-container: #ffd7f0;
+  --color-md-on-tertiary-container: #3a002d;
+
+  --color-md-surface: #fdfbff;
+  --color-md-surface-variant: #e1e2ec;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--color-md-surface)] text-[var(--color-md-on-secondary-container)];
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "CCT Browser",
+  "description": "An open source Chromium-fork Android browser built via GitHub Actions with the package name com.cct.browser.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

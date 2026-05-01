@@ -1,0 +1,103 @@
+name: Build CCT Browser (Android)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # IMPORTANT: Standard GitHub runners (14GB free space) are NOT large enough to build Chromium.
+    # It requires ~100GB+ of disk space. This workflow uses a maximization action, but for a 
+    # stable production build, you should use github-hosted larger runners (e.g. ubuntu-latest-8-cores)
+    # or a self-hosted runner.
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Maximize Build Space
+      uses: easimon/maximize-build-space@master
+      with:
+        root-reserve-mb: 1024
+        swap-size-mb: 1024
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 git curl lsb-release sudo tzdata \
+             make gcc g++ ninja-build pkg-config libnss3-dev libcups2-dev \
+             libsecret-1-dev libpci-dev wget
+
+    - name: Install depot_tools
+      run: |
+        git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $HOME/depot_tools
+        echo "$HOME/depot_tools" >> $GITHUB_PATH
+
+    - name: Fetch Chromium (Android)
+      run: |
+        mkdir -p $HOME/chromium
+        cd $HOME/chromium
+        # Fetch only the code necessary to build to save disk space
+        fetch --nohooks android
+
+    - name: Checkout Target Version
+      run: |
+        cd $HOME/chromium/src
+        # Using a reliable recent stable version. 
+        # Update this tag to the latest stable Android Chromium tag as needed.
+        git checkout refs/tags/126.0.6478.122
+        gclient sync -D --with_branch_heads --with_tags
+
+    - name: Install Android Dependencies
+      run: |
+        cd $HOME/chromium/src
+        yes | sudo build/install-build-deps-android.sh || true
+
+    - name: Apply CCT Browser Patches
+      run: |
+        # Make the scripts executable
+        chmod +x $GITHUB_WORKSPACE/scripts/patch_package.sh
+        # Run patch script to rename org.chromium.chrome to com.cct.browser
+        $GITHUB_WORKSPACE/scripts/patch_package.sh $HOME/chromium/src
+
+    - name: Run GN Hook
+      run: |
+        cd $HOME/chromium/src
+        gclient runhooks
+
+    - name: Configure GN Args
+      run: |
+        cd $HOME/chromium/src
+        mkdir -p out/Default
+        # Configure minimal build parameters for Android arm64
+        # Setting symbol_level=0 and is_debug=false to minimize disk usage and build time.
+        echo 'target_os="android"' >> out/Default/args.gn
+        echo 'target_cpu="arm64"' >> out/Default/args.gn
+        echo 'is_debug=false' >> out/Default/args.gn
+        echo 'is_component_build=false' >> out/Default/args.gn
+        echo 'symbol_level=0' >> out/Default/args.gn
+        echo 'android_channel="stable"' >> out/Default/args.gn
+        echo 'proprietary_codecs=true' >> out/Default/args.gn
+        echo 'ffmpeg_branding="Chrome"' >> out/Default/args.gn
+        gn gen out/Default
+
+    - name: Build CCT Browser APK
+      run: |
+        cd $HOME/chromium/src
+        # Target the Chrome public APK depending on the manifest adjustments
+        ninja -C out/Default chrome_public_apk
+
+    - name: Upload CCT Browser APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: CCTBrowser-arm64.apk
+        path: ~/chromium/src/out/Default/apks/ChromePublic.apk
