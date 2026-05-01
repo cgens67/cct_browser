@@ -4,6 +4,7 @@ import { Github, PlayCircle, Smartphone, Terminal, Hammer, Box, ChevronRight, Do
 
 export default function App() {
   const [selectedFeature, setSelectedFeature] = useState<{title: string, details: string} | null>(null);
+  const [showHardareWarning, setShowHardwareWarning] = useState(true);
   const workflowRef = useRef<HTMLElement>(null);
 
   const scrollToWorkflow = () => {
@@ -61,15 +62,60 @@ export default function App() {
       {/* Main Content */}
       <main className="pt-24 pb-20 px-6 max-w-6xl mx-auto">
         
+        {/* Hardware Warning Alert */}
+        <AnimatePresence>
+          {showHardareWarning && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mb-8 overflow-hidden"
+            >
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col sm:flex-row items-start gap-4">
+                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center shrink-0 text-amber-700">
+                  <Box size={20} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-amber-900 mb-1">Architecture Limitation Detected</h3>
+                  <p className="text-amber-800 text-sm leading-relaxed mb-4">
+                    Chromium source code is <b>~62GB</b>. Standard GitHub free runners only provide ~14-30GB of disk space. Builds will fail with <code className="bg-amber-200/50 px-1 rounded text-xs font-bold">No space left on device</code> unless you use a <b>Larger Runner</b> or a <b>Self-Hosted Runner</b>.
+                  </p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setShowHardwareWarning(false)}
+                      className="text-xs font-bold bg-amber-900 text-white px-4 py-2 rounded-full hover:bg-amber-800"
+                    >
+                      I Understand
+                    </button>
+                    <a 
+                      href="https://docs.github.com/en/actions/using-github-hosted-runners/using-larger-runners"
+                      target="_blank" rel="noreferrer"
+                      className="text-xs font-bold text-amber-900 border border-amber-300 px-4 py-2 rounded-full hover:bg-amber-100"
+                    >
+                      Learn about Larger Runners
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Hero Section - Expressive Display */}
         <section className="py-12 md:py-20 flex flex-col items-center text-center">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 100 }}
-            className="mb-8 p-6 bg-md-tertiary-container rounded-[2.5rem] shadow-xl shadow-md-tertiary/10"
+            className="mb-8 p-1 bg-white rounded-[2.5rem] shadow-2xl shadow-blue-500/20"
           >
-            <Smartphone size={48} className="text-md-on-tertiary-container" />
+            <div className="w-24 h-24 bg-gradient-to-br from-md-primary to-md-tertiary rounded-[2.2rem] flex items-center justify-center text-white relative overflow-hidden">
+               {/* Decorative layers for MD3 aesthetic */}
+              <div className="absolute top-0 left-0 w-full h-full bg-white/10 opacity-50 translate-x-1/2 translate-y-1/2 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-0 right-0 w-3/4 h-3/4 bg-black/10 opacity-30 -translate-x-1/4 -translate-y-1/4 rounded-full blur-xl"></div>
+              
+              <span className="text-5xl font-black tracking-tighter z-10 drop-shadow-md">C</span>
+            </div>
           </motion.div>
           
           <motion.h1 

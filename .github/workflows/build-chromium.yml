@@ -46,16 +46,28 @@ jobs:
       run: |
         mkdir -p $HOME/chromium
         cd $HOME/chromium
-        # Fetch only the code necessary to build to save disk space
-        fetch --nohooks android
+        # Use gclient directly to attempt a shallow sync to save disk space
+        # Standard 'fetch android' clones the full 60GB repository which fails on standard runners.
+        gclient config --spec 'solutions = [
+          {
+            "name": "src",
+            "url": "https://chromium.googlesource.com/chromium/src.git",
+            "managed": False,
+            "custom_deps": {},
+            "custom_vars": {},
+          },
+        ]
+        target_os = ["android"]'
+        
+        echo "Starting shallow sync (this may still fail on standard 14GB runners)..."
+        # --no-history and --shallow are critical here
+        gclient sync --nohooks --no-history --shallow --revision refs/tags/126.0.6478.122
 
     - name: Checkout Target Version
       run: |
+        # In a shallow sync, we are already at the revision specified above
         cd $HOME/chromium/src
-        # Using a reliable recent stable version. 
-        # Update this tag to the latest stable Android Chromium tag as needed.
-        git checkout refs/tags/126.0.6478.122
-        gclient sync -D --with_branch_heads --with_tags
+        git checkout -f refs/tags/126.0.6478.122
 
     - name: Install Android Dependencies
       run: |
